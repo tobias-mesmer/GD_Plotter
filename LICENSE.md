@@ -1,5 +1,6 @@
-Third-party libraries are licenced under the licenses included in their respective folders. 
+The MIT License (MIT)
 
+Third-party libraries are licenced under the licenses included in their respective folders.
 
 Copyright (c) 2026 Tobias Mesmer
 
