@@ -37,7 +37,17 @@ target_include_directories(glad PUBLIC external/glad/include)
 
 find_package(OpenGL REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME}
+        src/main.cpp
+        src/graphics/Renderer.cpp
+        src/graphics/Camera.cpp
+        src/graphics/Shader.cpp
+        src/graphics/OrbitControl.cpp
+        src/graphics/GridRenderer.cpp
+
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 target_link_libraries(${PROJECT_NAME}
         PRIVATE
