@@ -1,20 +1,30 @@
 #include <iostream>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include "glad.h"
+#include "graphics/OrbitControl.h"
 #include "graphics/Renderer.h"
 
 using namespace gdp::graphics;
 
 int main() {
-    std::cout << "========== GD Plotter ==========" << std::endl;
+    std::cout << "==================== GD Plotter ====================" << std::endl;
+    std::cout << std::endl <<
+            "GD Plotter Copyright (C) 2026 Tobias Mesmer." << std::endl <<
+            "This program comes with ABSOLUTELY NO WARRANTY;" << std::endl <<
+            "This is free software, and you are welcome to redistribute it" << std::endl <<
+            "under certain conditions. See LICENSE.md." << std::endl
+            << std::endl;
+    std::cout << "====================================================" << std::endl;
 
-    const auto renderer = std::make_shared<Renderer>();
-    const auto window = renderer->getWindow();
+    Camera camera{};
+    OrbitControl control{};
+    Renderer renderer{camera};
+    const auto window = renderer.getWindow();
 
     while (!glfwWindowShouldClose(window)) {
-        glClearColor(0.0, 0.2, 0.3, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        control.update(camera, window);
+        renderer.render(camera);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

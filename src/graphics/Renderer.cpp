@@ -1,10 +1,10 @@
 #include "../../include/graphics/Renderer.h"
 #include <iostream>
 #include "glad.h"
+#include "graphics/OrbitControl.h"
 
 namespace gdp::graphics {
-
-    Renderer::Renderer() {
+    Renderer::Renderer(Camera &camera):camera(camera) {
         glfwSetErrorCallback(error_callback);
 
         if (!glfwInit()) exit(EXIT_FAILURE);
@@ -12,14 +12,13 @@ namespace gdp::graphics {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-        window = glfwCreateWindow(640, 480, "GD_Plotter", nullptr, nullptr);
-        if (!window)
-        {
+        m_window = glfwCreateWindow(1280, 720, "GD_Plotter", nullptr, nullptr);
+        if (!m_window) {
             glfwTerminate();
             exit(EXIT_FAILURE);
         }
 
-        glfwMakeContextCurrent(window);
+        glfwMakeContextCurrent(m_window);
         glfwSwapInterval(1);
 
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
@@ -27,23 +26,34 @@ namespace gdp::graphics {
             exit(EXIT_FAILURE);
         }
 
-        glfwSetKeyCallback(window, key_callback);
+        glfwSetKeyCallback(m_window, key_callback);
+        glfwSetScrollCallback(m_window, scroll_callback);
     }
 
     Renderer::~Renderer() {
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(m_window);
         glfwTerminate();
     }
 
-    void Renderer::error_callback(int error, const char* description)
-    {
+    void Renderer::render(const Camera& camera) const {
+        glClearColor(m_theme.background.color.r, m_theme.background.color.g, m_theme.background.color.b, m_theme.background.color.a);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Render
+    }
+
+    void Renderer::error_callback(int error, const char* description) {
         fprintf(stderr, "Error: %s\n", description);
     }
 
-    void Renderer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-    {
+    void Renderer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
             glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+
+    void Renderer::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
+        auto* control = static_cast<OrbitControl*>(glfwGetWindowUserPointer(window));
+        control->onScroll(yOffset);
     }
 
 }

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Define output location for multi-config generators (Visual Studio, Ninja Multi-Config)
+# Define output location for multi-config generators
 foreach(OUTPUTCONFIG DEBUG RELEASE RELWITHDEBINFO MINSIZEREL)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/bin/${OUTPUTCONFIG})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/bin/${OUTPUTCONFIG})
@@ -31,6 +31,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glfw)
 
+include(FetchContent)
+
+FetchContent_Declare(
+        glm
+        GIT_REPOSITORY	https://github.com/g-truc/glm.git
+        GIT_TAG 	1.0.3
+)
+FetchContent_MakeAvailable(glm)
+
 # GLAD
 add_library(glad external/glad/src/glad.c)
 target_include_directories(glad PUBLIC external/glad/include)
@@ -54,4 +63,5 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         glad
         OpenGL::GL
+        glm::glm
 )
