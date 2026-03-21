@@ -28,8 +28,8 @@ namespace gdp::graphics {
     }
 
     void OrbitControl::updateCameraPosition() const {
-        glm::dvec3 newPos = m_target +
-                            glm::dvec3(
+        glm::vec3 newPos = m_target +
+                            glm::vec3(
                                 m_radius * cos(m_pitch) * sin(m_yaw),
                                 m_radius * sin(m_pitch),
                                 m_radius * cos(m_pitch) * cos(m_yaw)

@@ -1,7 +1,14 @@
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "../../include/graphics/Renderer.h"
-#include <iostream>
-#include "glad.h"
+#include "graphics/GridRenderer.h"
 #include "graphics/OrbitControl.h"
+#include <iostream>
+#include <memory>
 
 namespace gdp::graphics {
     Renderer::Renderer(Camera& camera) : m_camera(camera) {
@@ -30,6 +37,8 @@ namespace gdp::graphics {
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
+
+        m_gridRenderer = std::make_unique<GridRenderer>();
     }
 
     Renderer::~Renderer() {
@@ -47,6 +56,7 @@ namespace gdp::graphics {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render
+        m_gridRenderer->drawDebugCube(camera);
     }
 
     void Renderer::error_callback(int error, const char* description) {

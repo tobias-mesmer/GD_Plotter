@@ -5,9 +5,9 @@
 namespace gdp::graphics {
     class Camera {
     public:
-        void setPosition(const glm::dvec3& newPos) { m_position = newPos; }
+        void setPosition(const glm::vec3& newPos) { m_position = newPos; }
 
-        void setTarget(const glm::dvec3& newTarget) { m_target = newTarget; }
+        void setTarget(const glm::vec3& newTarget) { m_target = newTarget; }
 
         void setAspectRatio(double aspect) { m_aspectRatio = aspect; }
 
@@ -21,17 +21,20 @@ namespace gdp::graphics {
 
         void updateViewMatrix();
 
+        [[nodiscard]] const glm::mat4& getViewMatrix() const {return m_view;}
+        [[nodiscard]] const glm::mat4& getProjectionMatrix() const {return m_projection;}
+
     private:
-        glm::dvec3 m_position;
-        glm::dvec3 m_target;
-        glm::dvec3 m_up{0, 1, 0};
+        glm::vec3 m_position;
+        glm::vec3 m_target;
+        glm::vec3 m_up{0, 1, 0};
 
         double m_aspectRatio = 16.0 / 9.0;
         double m_fov = 45.0;
         double m_nearPlane = 0.1;
         double m_farPlane = 1000.0;
 
-        glm::dmat4 m_projection;
-        glm::dmat4 m_view;
+        glm::mat4 m_projection;
+        glm::mat4 m_view;
     };
 }

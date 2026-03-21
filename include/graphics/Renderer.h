@@ -1,8 +1,10 @@
 #pragma once
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
+
+#include <memory>
 
 #include "Camera.h"
+#include "GridRenderer.h"
 #include "Theme.h"
 
 namespace gdp::graphics {
@@ -21,6 +23,7 @@ namespace gdp::graphics {
     private:
         GLFWwindow* m_window;
         Camera& m_camera;
+        std::unique_ptr<GridRenderer> m_gridRenderer;
         Theme m_theme;
 
         int m_windowWidth{1280};

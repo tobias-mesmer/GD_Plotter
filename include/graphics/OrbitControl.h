@@ -15,7 +15,7 @@ namespace gdp::graphics {
     private:
         Camera& m_camera;
 
-        glm::dvec3 m_target{0.0, 0.0, 0.0};
+        glm::vec3 m_target{0.0, 0.0, 0.0};
 
         double m_lastX{0};
         double m_lastY{0};

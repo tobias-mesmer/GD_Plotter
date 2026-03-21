@@ -1,4 +1,5 @@
 #pragma once
-
-class Shader {
-};
+namespace gdp::graphics {
+    class Shader {
+    };
+}
