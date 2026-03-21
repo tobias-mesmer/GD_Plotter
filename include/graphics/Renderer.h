@@ -8,7 +8,7 @@
 namespace gdp::graphics {
     class Renderer {
     public:
-        explicit Renderer(Camera &camera);
+        explicit Renderer(Camera& camera);
 
         ~Renderer();
 
@@ -16,18 +16,24 @@ namespace gdp::graphics {
             return m_window;
         }
 
-        void render(const Camera &camera) const;
+        void render(const Camera& camera);
 
     private:
         GLFWwindow* m_window;
-        Camera &camera;
+        Camera& m_camera;
         Theme m_theme;
+
+        int m_windowWidth{1280};
+        int m_windowHeight{720};
 
         static void error_callback(int error, const char* description);
 
+        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+        void onResize(int width, int height);
+
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
         static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
     };
-
-
 }

@@ -1,33 +1,46 @@
 #include "../../include/graphics/OrbitControl.h"
 
-#include <iostream>
-#include <ostream>
+#include <iomanip>
 #include <GLFW/glfw3.h>
 
 namespace gdp::graphics {
-    void OrbitControl::update(Camera &camera, GLFWwindow* window) {
+    void OrbitControl::update(GLFWwindow* window) {
         double x, y;
         glfwGetCursorPos(window, &x, &y);
 
-        if (bool leftDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            const double dx = x - lastX;
-            const double dy = y - lastY;
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            const double dx = x - m_lastX;
+            const double dy = y - m_lastY;
 
-            yaw   += dx * rotationSpeed;
-            pitch += dy * rotationSpeed;
+            m_yaw += dx * m_rotationSpeed;
+            m_pitch += dy * m_rotationSpeed;
+
+            if (m_pitch > 89.0f)
+                m_pitch = 89.0f;
+            if (m_pitch < -89.0f)
+                m_pitch = -89.0f;
 
             updateCameraPosition();
         }
 
-        lastX = x;
-        lastY = y;
+        m_lastX = x;
+        m_lastY = y;
     }
 
-    void OrbitControl::updateCameraPosition() {
-        std::cout << "OrbitControl::updateCameraPosition " << yaw << "," << pitch << std::endl;
+    void OrbitControl::updateCameraPosition() const {
+        glm::dvec3 newPos = m_target +
+                            glm::dvec3(
+                                m_radius * cos(m_pitch) * sin(m_yaw),
+                                m_radius * sin(m_pitch),
+                                m_radius * cos(m_pitch) * cos(m_yaw)
+                            );
+
+        m_camera.setPosition(newPos);
+        m_camera.updateViewMatrix();
     }
 
-    void OrbitControl::onScroll(double yOffset) {
-        std::cout << "OrbitControl::onScroll " << yOffset << std::endl;
+    void OrbitControl::onScroll(double delta) {
+        m_radius -= delta * m_zoomSpeed;
+        updateCameraPosition();
     }
 }

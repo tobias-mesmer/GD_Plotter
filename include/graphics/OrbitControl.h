@@ -6,15 +6,25 @@
 namespace gdp::graphics {
     class OrbitControl {
     public:
-        void update(Camera& camera, GLFWwindow* window);
-        void onScroll(double yOffset);
-    private:
-        double lastX{0};
-        double lastY{0};
-        double pitch{0};
-        double yaw{0};
-        double rotationSpeed{0};
+        explicit OrbitControl(Camera& camera) : m_camera(camera) {}
 
-        void updateCameraPosition();
+        void update(GLFWwindow* window);
+
+        void onScroll(double yOffset);
+
+    private:
+        Camera& m_camera;
+
+        glm::dvec3 m_target{0.0, 0.0, 0.0};
+
+        double m_lastX{0};
+        double m_lastY{0};
+        double m_pitch{0};
+        double m_yaw{0};
+        double m_radius{10.0};
+        double m_rotationSpeed{0.005};
+        double m_zoomSpeed{1.0};
+
+        void updateCameraPosition() const;
     };
 }

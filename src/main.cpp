@@ -17,16 +17,17 @@ int main() {
     std::cout << "====================================================" << std::endl;
 
     Camera camera{};
-    OrbitControl control{};
+    OrbitControl control{camera};
     Renderer renderer{camera};
     const auto window = renderer.getWindow();
 
     while (!glfwWindowShouldClose(window)) {
-        control.update(camera, window);
+        glfwPollEvents();
+
+        control.update(window);
         renderer.render(camera);
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     exit(EXIT_SUCCESS);
