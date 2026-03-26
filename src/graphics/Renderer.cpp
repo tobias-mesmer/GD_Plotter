@@ -58,6 +58,8 @@ namespace gdp::graphics {
 
         // Render
         m_gridRenderer->drawDebugCube(camera);
+
+        glfwSwapBuffers(m_window);
     }
 
     void Renderer::error_callback(int error, const char* description) {
@@ -70,11 +72,8 @@ namespace gdp::graphics {
     }
 
     void Renderer::onResize(int width, int height) {
-        m_windowWidth = width;
-        m_windowHeight = height;
-
-        m_camera.setAspectRatio(static_cast<double>(width) / height);
-        m_camera.updateProjectionMatrix();
+        glViewport(0, 0, width, height); // Adjust viewport accordingly
+        render(m_camera); // Re-render manually, since callback fires until let go and stalls render loop
     }
 
 

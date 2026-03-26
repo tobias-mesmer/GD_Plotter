@@ -21,8 +21,6 @@ namespace gdp::graphics {
             if (m_pitch < -89.0f)
                 m_pitch = -89.0f;
 
-            std::cout << "yaw: " << m_yaw << ", pitch: " << m_pitch << std::endl;
-
             updateCameraPosition();
         }
 

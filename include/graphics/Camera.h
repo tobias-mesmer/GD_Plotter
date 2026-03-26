@@ -31,7 +31,7 @@ namespace gdp::graphics {
 
         double m_aspectRatio = 16.0 / 9.0;
         double m_fov = 45.0;
-        double m_nearPlane = 0.1;
+        double m_nearPlane = 0.01;
         double m_farPlane = 1000.0;
 
         glm::mat4 m_projection;

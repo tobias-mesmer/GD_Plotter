@@ -6,7 +6,7 @@
 namespace gdp::graphics {
     class OrbitControl {
     public:
-        explicit OrbitControl(Camera& camera) : m_camera(camera) {}
+        explicit OrbitControl(Camera& camera) : m_camera(camera) {updateCameraPosition();}
 
         void update(GLFWwindow* window);
 

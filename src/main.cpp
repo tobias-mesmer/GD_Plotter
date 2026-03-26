@@ -26,8 +26,6 @@ int main() {
 
         control.update(window);
         renderer.render(camera);
-
-        glfwSwapBuffers(window);
     }
 
     exit(EXIT_SUCCESS);
