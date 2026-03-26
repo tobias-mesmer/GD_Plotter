@@ -22,8 +22,8 @@ namespace gdp::graphics {
         double m_pitch{0};
         double m_yaw{0};
         double m_radius{10.0};
-        double m_rotationSpeed{0.005};
-        double m_zoomSpeed{1.0};
+        double m_rotationSpeed{0.3};
+        double m_zoomSpeed{0.5};
 
         void updateCameraPosition() const;
     };

@@ -18,7 +18,7 @@ int main() {
 
     Camera camera{};
     OrbitControl control{camera};
-    Renderer renderer{camera};
+    Renderer renderer{camera, control};
     const auto window = renderer.getWindow();
 
     while (!glfwWindowShouldClose(window)) {

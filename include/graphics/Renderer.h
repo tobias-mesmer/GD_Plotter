@@ -5,12 +5,13 @@
 
 #include "Camera.h"
 #include "GridRenderer.h"
+#include "OrbitControl.h"
 #include "Theme.h"
 
 namespace gdp::graphics {
     class Renderer {
     public:
-        explicit Renderer(Camera& camera);
+        explicit Renderer(Camera& camera, OrbitControl& orbitControl);
 
         ~Renderer();
 
@@ -23,6 +24,7 @@ namespace gdp::graphics {
     private:
         GLFWwindow* m_window;
         Camera& m_camera;
+        OrbitControl& m_orbitControl;
         std::unique_ptr<GridRenderer> m_gridRenderer;
         Theme m_theme;
 

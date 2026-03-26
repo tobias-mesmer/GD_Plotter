@@ -11,13 +11,14 @@
 #include <memory>
 
 namespace gdp::graphics {
-    Renderer::Renderer(Camera& camera) : m_camera(camera) {
+    Renderer::Renderer(Camera& camera, OrbitControl& orbitControl) : m_camera(camera), m_orbitControl(orbitControl) {
         glfwSetErrorCallback(error_callback);
 
         if (!glfwInit()) exit(EXIT_FAILURE);
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "GD_Plotter", nullptr, nullptr);
         if (!m_window) {
@@ -83,7 +84,7 @@ namespace gdp::graphics {
     }
 
     void Renderer::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-        auto* control = static_cast<OrbitControl*>(glfwGetWindowUserPointer(window));
-        control->onScroll(yOffset);
+        auto* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+        renderer->m_orbitControl.onScroll(yOffset);
     }
 }
