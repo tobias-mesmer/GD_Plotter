@@ -52,7 +52,7 @@ add_executable(${PROJECT_NAME}
         src/graphics/Camera.cpp
         src/graphics/Shader.cpp
         src/graphics/OrbitControl.cpp
-        src/graphics/GridRenderer.cpp
+        src/graphics/DebugCube.cpp
 
 )
 

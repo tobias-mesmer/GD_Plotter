@@ -1,7 +1,6 @@
 #include "../../include/graphics/OrbitControl.h"
 
 #include <iomanip>
-#include <iostream>
 #include <GLFW/glfw3.h>
 
 namespace gdp::graphics {

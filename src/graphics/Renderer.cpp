@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../../include/graphics/Renderer.h"
-#include "graphics/GridRenderer.h"
+#include "graphics/DebugCube.h"
 #include "graphics/OrbitControl.h"
 #include <iostream>
 #include <memory>
@@ -39,7 +39,7 @@ namespace gdp::graphics {
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
 
-        m_gridRenderer = std::make_unique<GridRenderer>();
+        m_debugCube = std::make_unique<DebugCube>();
     }
 
     Renderer::~Renderer() {
@@ -57,7 +57,7 @@ namespace gdp::graphics {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render
-        m_gridRenderer->drawDebugCube(camera);
+        m_debugCube->drawDebugCube(camera);
 
         glfwSwapBuffers(m_window);
     }

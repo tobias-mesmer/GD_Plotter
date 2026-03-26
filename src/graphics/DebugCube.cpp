@@ -1,5 +1,5 @@
 #include "graphics/Camera.h"
-#include "graphics/GridRenderer.h"
+#include "graphics/DebugCube.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -25,19 +25,17 @@ void main() {
 }
 )";
 
-    GridRenderer::GridRenderer() {
+    DebugCube::DebugCube():m_shader(Shader(cubeVS, cubeFS)) {
         initCube();
-        m_shader = createShaderProgram(cubeVS, cubeFS);
     }
 
-    GridRenderer::~GridRenderer() {
+    DebugCube::~DebugCube() {
         glDeleteVertexArrays(1, &m_vao);
         glDeleteBuffers(1, &m_vbo);
         glDeleteBuffers(1, &m_ebo);
-        glDeleteProgram(m_shader);
     }
 
-    void GridRenderer::initCube() {
+    void DebugCube::initCube() {
         float vertices[] = {
             -1, -1, -1,
             1, -1, -1,
@@ -71,39 +69,17 @@ void main() {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) nullptr);
 
         glBindVertexArray(0);
     }
 
-    GLuint GridRenderer::createShaderProgram(const char* vs, const char* fs) {
-        auto compile = [](GLenum type, const char* src) {
-            GLuint shader = glCreateShader(type);
-            glShaderSource(shader, 1, &src, nullptr);
-            glCompileShader(shader);
-            return shader;
-        };
-
-        GLuint vert = compile(GL_VERTEX_SHADER, vs);
-        GLuint frag = compile(GL_FRAGMENT_SHADER, fs);
-
-        GLuint prog = glCreateProgram();
-        glAttachShader(prog, vert);
-        glAttachShader(prog, frag);
-        glLinkProgram(prog);
-
-        glDeleteShader(vert);
-        glDeleteShader(frag);
-
-        return prog;
-    }
-
-    void GridRenderer::drawDebugCube(const Camera& camera) const {
-        glUseProgram(m_shader);
+    void DebugCube::drawDebugCube(const Camera& camera) const {
+        glUseProgram(m_shader.m_program);
 
         // Set uniforms
-        GLint uView = glGetUniformLocation(m_shader, "uView");
-        GLint uProj = glGetUniformLocation(m_shader, "uProj");
+        GLint uView = glGetUniformLocation(m_shader.m_program, "uView");
+        GLint uProj = glGetUniformLocation(m_shader.m_program, "uProj");
 
         glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
         glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));

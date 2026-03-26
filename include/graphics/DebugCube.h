@@ -1,13 +1,15 @@
 #pragma once
 
 #include <glad/glad.h>
+
+#include "Shader.h"
 #include "graphics/Camera.h"
 
 namespace gdp::graphics {
-    class GridRenderer {
+    class DebugCube {
     public:
-        GridRenderer();
-        ~GridRenderer();
+        DebugCube();
+        ~DebugCube();
 
         void drawDebugCube(const Camera& camera) const;
 
@@ -15,10 +17,9 @@ namespace gdp::graphics {
         GLuint m_vao = 0;
         GLuint m_vbo = 0;
         GLuint m_ebo = 0;
-        GLuint m_shader = 0;
+        Shader m_shader;
 
         void initCube();
-        GLuint createShaderProgram(const char* vs, const char* fs);
     };
 
 }

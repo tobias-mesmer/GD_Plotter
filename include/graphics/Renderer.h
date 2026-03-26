@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "Camera.h"
-#include "GridRenderer.h"
+#include "DebugCube.h"
 #include "OrbitControl.h"
 #include "Theme.h"
 
@@ -25,7 +25,7 @@ namespace gdp::graphics {
         GLFWwindow* m_window;
         Camera& m_camera;
         OrbitControl& m_orbitControl;
-        std::unique_ptr<GridRenderer> m_gridRenderer;
+        std::unique_ptr<DebugCube> m_debugCube;
         Theme m_theme;
 
         int m_windowWidth{1280};
