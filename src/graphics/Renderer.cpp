@@ -19,6 +19,7 @@ namespace gdp::graphics {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_SAMPLES, 4);
 
         m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, "GD_Plotter", nullptr, nullptr);
         if (!m_window) {
@@ -34,11 +35,13 @@ namespace gdp::graphics {
             exit(EXIT_FAILURE);
         }
 
+        glEnable(GL_MULTISAMPLE);
         glfwSetWindowUserPointer(m_window, this);
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
 
+        m_axisBox = std::make_unique<AxisBox>();
         m_debugCube = std::make_unique<DebugCube>();
     }
 
@@ -57,13 +60,14 @@ namespace gdp::graphics {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render
-        m_debugCube->drawDebugCube(camera);
+        m_debugCube->draw(camera);
+        m_axisBox->draw(camera);
 
         glfwSwapBuffers(m_window);
     }
 
     void Renderer::error_callback(int error, const char* description) {
-        fprintf(stderr, "Error: %s\n", description);
+        fprintf(stderr, "Error %i: %s\n", error, description);
     }
 
     void Renderer::framebuffer_size_callback(GLFWwindow* window, int width, int height) {

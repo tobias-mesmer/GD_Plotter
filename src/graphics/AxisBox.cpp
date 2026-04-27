@@ -1,20 +1,19 @@
-#include "graphics/Camera.h"
-#include "graphics/DebugCube.h"
+#include "../../include/graphics/AxisBox.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
 namespace gdp::graphics {
-    DebugCube::DebugCube():m_shader(Shader("../../assets/shaders/debugCube.vs", "../../assets/shaders/debugCube.fs")) {
+    AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
         init();
     }
 
-    DebugCube::~DebugCube() {
+    AxisBox::~AxisBox() {
         glDeleteVertexArrays(1, &m_vao);
         glDeleteBuffers(1, &m_vbo);
         glDeleteBuffers(1, &m_ebo);
     }
 
-    void DebugCube::init() {
+    void AxisBox::init() {
         float vertices[] = {
             -1, -1, -1,
             1, -1, -1,
@@ -54,21 +53,32 @@ namespace gdp::graphics {
 
         uView = glGetUniformLocation(m_shader.m_program, "uView");
         uProj = glGetUniformLocation(m_shader.m_program, "uProj");
+        uModel = glGetUniformLocation(m_shader.m_program, "uModel");
+
+        setExtents(m_extentsMin, m_extentsMax); // Apply extents to Model matrix
     }
 
-    void DebugCube::draw(const Camera& camera) const {
+    void AxisBox::draw(const Camera& camera) const {
         glUseProgram(m_shader.m_program);
 
         glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
         glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+        glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
 
         glBindVertexArray(m_vao);
-        glLineWidth(2);
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, nullptr);
         glLineWidth(1);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, nullptr);
 
         // Unbind buffers
         glBindVertexArray(0);
         glUseProgram(0);
+    }
+
+    void AxisBox::setExtents(const glm::vec3& min, const glm::vec3& max) {
+        glm::vec3 center = (min + max) * 0.5f;
+        glm::vec3 size = (max - min) * 0.5f;
+
+        m_model = glm::translate(glm::mat4(1.0f), center)
+                  * glm::scale(glm::mat4(1.0f), size);
     }
 }

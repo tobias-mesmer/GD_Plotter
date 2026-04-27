@@ -53,6 +53,7 @@ add_executable(${PROJECT_NAME}
         src/graphics/Shader.cpp
         src/graphics/OrbitControl.cpp
         src/graphics/DebugCube.cpp
+        src/graphics/AxisBox.cpp
 
 )
 
