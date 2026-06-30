@@ -1,14 +1,17 @@
+#include "graphics/Renderer.h"
+
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
-#include "../../include/graphics/Renderer.h"
 #include "graphics/DebugCube.h"
 #include "graphics/OrbitControl.h"
+
 #include <iostream>
-#include <memory>
+#include <sstream>
 
 namespace gdp::graphics {
     Renderer::Renderer(Camera& camera, OrbitControl& orbitControl) : m_camera(camera), m_orbitControl(orbitControl) {
@@ -28,7 +31,7 @@ namespace gdp::graphics {
         }
 
         glfwMakeContextCurrent(m_window);
-        glfwSwapInterval(1);
+        glfwSwapInterval(0);
 
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
             std::cerr << "Failed to initialize GLAD\n";
@@ -41,11 +44,24 @@ namespace gdp::graphics {
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
 
+        { // SETUP IMGUI
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            ImGuiIO& io = ImGui::GetIO();
+            ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+            ImGui_ImplOpenGL3_Init("#version 450");
+            ImGui::StyleColorsDark();
+        }
+
         m_axisBox = std::make_unique<AxisBox>();
         m_debugCube = std::make_unique<DebugCube>();
     }
 
     Renderer::~Renderer() {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
         glfwDestroyWindow(m_window);
         glfwTerminate();
     }
@@ -63,7 +79,36 @@ namespace gdp::graphics {
         m_debugCube->draw(camera);
         m_axisBox->draw(camera);
 
+        updateFPS();
+        drawGUI();
+
         glfwSwapBuffers(m_window);
+    }
+
+    void Renderer::updateFPS() {
+        m_frameCounter++;
+        const auto now = glfwGetTime();
+        m_elapsed = now - m_lastFpsTime;
+        if (m_elapsed >= 1.0) {
+            m_fps = m_frameCounter / m_elapsed;
+            m_frameCounter = 0;
+            m_lastFpsTime = now;
+        }
+    }
+
+    void Renderer::drawGUI() const {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - m_statsWindowSize.x - 10, 10));
+        ImGui::SetNextWindowSize(m_statsWindowSize);
+        ImGui::Begin("Stats");
+        ImGui::Text("FPS: %.1f", m_fps);
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     void Renderer::error_callback(int error, const char* description) {
