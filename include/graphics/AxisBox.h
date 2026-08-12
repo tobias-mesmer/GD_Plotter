@@ -27,9 +27,22 @@ namespace gdp::graphics {
         GLint uView = -1;
         GLint uProj = -1;
         GLint uModel = -1;
+        GLint uColor = -1;
+
+        std::vector<glm::vec3> m_ticks{};
+        GLuint m_vao_ticks = 0;
+        GLuint m_vbo_ticks = 0;
+
+        unsigned int m_ticksX = 10;
+        unsigned int m_ticksY = 10;
+        unsigned int m_ticksZ = 10;
 
         glm::mat4 m_model = glm::mat4(1.0f);
 
         void init();
+
+        void drawBox() const;
+
+        void drawTicks() const;
     };
 }

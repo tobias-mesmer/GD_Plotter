@@ -67,6 +67,8 @@ add_executable(${PROJECT_NAME}
         src/graphics/OrbitControl.cpp
         src/graphics/DebugCube.cpp
         src/graphics/AxisBox.cpp
+        src/plot/Ticks.cpp
+        src/plot/TextRenderer.cpp
 
 )
 
