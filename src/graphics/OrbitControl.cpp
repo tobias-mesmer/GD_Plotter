@@ -44,7 +44,7 @@ namespace gdp::graphics {
 
     void OrbitControl::onScroll(double delta) {
         m_radius -= delta * m_zoomSpeed;
-        m_radius = glm::clamp(m_radius, 1.0, 20.0);
+        m_radius = glm::clamp(m_radius, 1.0, 25.0);
         updateCameraPosition();
     }
 }

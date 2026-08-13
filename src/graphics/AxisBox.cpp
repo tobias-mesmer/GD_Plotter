@@ -3,6 +3,8 @@
 #include "plot/Ticks.h"
 #include <glm/gtc/type_ptr.hpp>
 
+#include "graphics/theme.h"
+
 namespace gdp::graphics {
     AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
         init();
@@ -79,8 +81,8 @@ namespace gdp::graphics {
 
     void AxisBox::draw(const Camera& camera) const {
         glUseProgram(m_shader.m_program);
-        glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
-        glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+        glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix()));
+        glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix()));
 
         drawBox();
         drawTicks();
@@ -90,7 +92,7 @@ namespace gdp::graphics {
 
     void AxisBox::drawBox() const {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
-        glUniform4fv(uColor, 1, glm::value_ptr(glm::vec4(glm::vec3(0.7), 1.0))); // grey
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.boxColor));
 
         glBindVertexArray(m_vao);
 
@@ -107,11 +109,11 @@ namespace gdp::graphics {
 
         glLineWidth(2);
 
-        glUniform4fv(uColor, 1, glm::value_ptr(glm::vec4(glm::vec3(0.84, 0.24, 0.30), 1.0)));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorX));
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(2 * m_ticksX));
-        glUniform4fv(uColor, 1, glm::value_ptr(glm::vec4(glm::vec3(0.55, 0.75, 0.25), 1.0)));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorY));
         glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * m_ticksX), static_cast<GLsizei>(2 * m_ticksY));
-        glUniform4fv(uColor, 1, glm::value_ptr(glm::vec4(glm::vec3(0.25, 0.45, 0.85), 1.0)));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorZ));
         glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * (m_ticksX + m_ticksY)), static_cast<GLsizei>(2 * m_ticksZ));
 
         glBindVertexArray(0);
@@ -127,7 +129,9 @@ namespace gdp::graphics {
         m_model = glm::translate(glm::mat4(1.0f), center)
                   * glm::scale(glm::mat4(1.0f), size);
 
-        m_ticks = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ);
+        auto tickResult = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ);
+        m_ticks = tickResult.segments;
+        m_labels = tickResult.labels;
 
         glBindVertexArray(m_vao_ticks);
 

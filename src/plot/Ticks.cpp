@@ -1,4 +1,6 @@
 #include "plot/Ticks.h"
+
+#include <format>
 #include <vector>
 
 namespace gdp {
@@ -7,28 +9,25 @@ namespace gdp {
         return std::vector<glm::vec3>{};
     }
 
-    std::vector<glm::vec3> plot::ticks(glm::vec3 min, glm::vec3 max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ) {
-        std::vector<glm::vec3> ticks{};
-        float stepX = (max.x - min.x) / static_cast<float>(ticksX - 1);
-        float stepY = (max.y - min.y) / static_cast<float>(ticksY - 1);
-        float stepZ = (max.z - min.z) / static_cast<float>(ticksZ - 1);
+    plot::TickResult plot::ticks(glm::vec3 min, glm::vec3 max, const unsigned int ticksX, const unsigned int ticksY, const unsigned int ticksZ) {
+        std::vector<glm::vec3> segments{};
+        std::vector<Label> labels{};
 
-        for (unsigned int i = 0; i < ticksX; i++) {
-            ticks.emplace_back(min + glm::vec3(i * stepX, 0.f, -0.1f));
-            ticks.emplace_back(min + glm::vec3(i * stepX, 0.f, 0.1f));
+        const unsigned counts[3] = {ticksX, ticksY, ticksZ};
+        for (int a = 0; a < 3; ++a) {
+            const float step = (max[a] - min[a]) / static_cast<float>(counts[a] - 1);
+            glm::vec3 outward(-0.2f);
+            outward[a] = 0.0f; // stick out on the other two axes
+            for (unsigned i = 0; i < counts[a]; ++i) {
+                glm::vec3 inner = min;
+                inner[a] += step * i;
+                const glm::vec3 outer = inner + outward;
+                segments.push_back(inner);
+                segments.push_back(outer);
+                labels.emplace_back(std::format("{:.2g}", min[a] + step * i), inner, outer);
+            }
         }
 
-        for (unsigned int i = 0; i < ticksY; i++) {
-            ticks.emplace_back(min + glm::vec3(-0.1f, i * stepY, 0.f));
-            ticks.emplace_back(min + glm::vec3(0.1f, i * stepY, 0.f));
-        }
-
-        // TODO Depends on view direction
-        for (unsigned int i = 0; i < ticksZ; i++) {
-            ticks.emplace_back(min + glm::vec3(-0.1f, 0.f, i * stepZ));
-            ticks.emplace_back(min + glm::vec3(0.1f, 0.f, i * stepZ));
-        }
-
-        return ticks;
+        return {.segments = std::move(segments), .labels = std::move(labels), .segmentCountPerAxis = {ticksX, ticksY, ticksZ}};
     }
 }

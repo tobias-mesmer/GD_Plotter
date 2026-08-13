@@ -13,6 +13,10 @@
 #include <iostream>
 #include <sstream>
 
+#include "plot/TextRenderer.h"
+#include "plot/Ticks.h"
+#include "graphics/theme.h"
+
 namespace gdp::graphics {
     Renderer::Renderer(Camera& camera, OrbitControl& orbitControl) : m_camera(camera), m_orbitControl(orbitControl) {
         glfwSetErrorCallback(error_callback);
@@ -38,13 +42,15 @@ namespace gdp::graphics {
             exit(EXIT_FAILURE);
         }
 
+        glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
         glfwSetWindowUserPointer(m_window, this);
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
 
-        { // SETUP IMGUI
+        {
+            // SETUP IMGUI
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
             ImGuiIO& io = ImGui::GetIO();
@@ -72,7 +78,7 @@ namespace gdp::graphics {
         m_camera.setAspectRatio(static_cast<double>(m_windowWidth) / m_windowHeight);
         m_camera.updateProjectionMatrix();
 
-        glClearColor(m_theme.background.color.r, m_theme.background.color.g, m_theme.background.color.b, m_theme.background.color.a);
+        glClearColor(theme::background.color.r, theme::background.color.g, theme::background.color.b, theme::background.color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Render
@@ -106,6 +112,12 @@ namespace gdp::graphics {
         ImGui::Begin("Stats");
         ImGui::Text("FPS: %.1f", m_fps);
         ImGui::End();
+
+        const auto viewProj = m_camera.projectionMatrix() * m_camera.viewMatrix();
+        const auto color = ImVec4(theme::axis_box.tickLabelsColor.r, theme::axis_box.tickLabelsColor.g, theme::axis_box.tickLabelsColor.b, theme::axis_box.tickLabelsColor.a);
+        for (const auto& label: m_axisBox->labels()) {
+            plot::drawLabel3D(viewProj, label, color);
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

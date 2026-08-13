@@ -29,7 +29,6 @@ namespace gdp::graphics {
         OrbitControl& m_orbitControl;
         std::unique_ptr<AxisBox> m_axisBox;
         std::unique_ptr<DebugCube> m_debugCube;
-        Theme m_theme;
 
         int m_windowWidth{1280};
         int m_windowHeight{720};

@@ -59,8 +59,8 @@ namespace gdp::graphics {
     void DebugCube::draw(const Camera& camera) const {
         glUseProgram(m_shader.m_program);
 
-        glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
-        glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+        glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix()));
+        glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix()));
 
         glBindVertexArray(m_vao);
         glLineWidth(2);
