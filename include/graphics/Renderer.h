@@ -44,6 +44,8 @@ namespace gdp::graphics {
 
         static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+        void updateProjection(int width, int height);
+
         void onResize(int width, int height);
 
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

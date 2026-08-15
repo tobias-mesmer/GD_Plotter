@@ -129,14 +129,12 @@ namespace gdp::graphics {
         m_model = glm::translate(glm::mat4(1.0f), center)
                   * glm::scale(glm::mat4(1.0f), size);
 
-        auto tickResult = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ);
-        m_ticks = tickResult.segments;
-        m_labels = tickResult.labels;
+        m_ticks = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ);
 
         glBindVertexArray(m_vao_ticks);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo_ticks);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(sizeof(glm::vec3) * m_ticks.size()), m_ticks.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(sizeof(glm::vec3) * m_ticks.segments.size()), m_ticks.segments.data(), GL_DYNAMIC_DRAW);
 
         glBindVertexArray(0);
     }

@@ -4,10 +4,8 @@
 
 #include "Shader.h"
 #include "graphics/Camera.h"
+#include "plot/Ticks.h"
 
-namespace gdp::plot {
-    struct Label;
-}
 
 namespace gdp::graphics {
     class AxisBox {
@@ -20,8 +18,9 @@ namespace gdp::graphics {
 
         void setExtents(const glm::vec3& min, const glm::vec3& max);
 
-        [[nodiscard]] const std::vector<glm::vec3>& ticks() const {return m_ticks;}
-        [[nodiscard]] const std::vector<plot::Label>& labels() const {return m_labels;}
+        [[nodiscard]] const glm::vec3& center() const {return (m_extentsMin + m_extentsMax) * 0.5f;}
+
+        [[nodiscard]] const plot::TickResult& ticks() const {return m_ticks;}
 
     private:
         glm::vec3 m_extentsMin = glm::vec3(-5.0f);
@@ -36,8 +35,7 @@ namespace gdp::graphics {
         GLint uModel = -1;
         GLint uColor = -1;
 
-        std::vector<glm::vec3> m_ticks;
-        std::vector<plot::Label> m_labels;
+        plot::TickResult m_ticks;
         GLuint m_vao_ticks = 0;
         GLuint m_vbo_ticks = 0;
 

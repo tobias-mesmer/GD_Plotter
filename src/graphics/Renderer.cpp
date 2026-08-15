@@ -48,6 +48,8 @@ namespace gdp::graphics {
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
         glfwSetScrollCallback(m_window, scroll_callback);
+        glfwGetFramebufferSize(m_window, &m_windowWidth, &m_windowHeight);
+        updateProjection(m_windowWidth, m_windowHeight);
 
         {
             // SETUP IMGUI
@@ -74,9 +76,7 @@ namespace gdp::graphics {
 
     void Renderer::render(const Camera& camera) {
         glfwGetFramebufferSize(m_window, &m_windowWidth, &m_windowHeight);
-
-        m_camera.setAspectRatio(static_cast<double>(m_windowWidth) / m_windowHeight);
-        m_camera.updateProjectionMatrix();
+        if (m_windowWidth == 0 || m_windowHeight == 0) return;
 
         glClearColor(theme::background.color.r, theme::background.color.g, theme::background.color.b, theme::background.color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -107,16 +107,43 @@ namespace gdp::graphics {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // Draw FPS GUI
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - m_statsWindowSize.x - 10, 10));
         ImGui::SetNextWindowSize(m_statsWindowSize);
         ImGui::Begin("Stats");
         ImGui::Text("FPS: %.1f", m_fps);
         ImGui::End();
 
+        // Draw tick labels
         const auto viewProj = m_camera.projectionMatrix() * m_camera.viewMatrix();
-        const auto color = ImVec4(theme::axis_box.tickLabelsColor.r, theme::axis_box.tickLabelsColor.g, theme::axis_box.tickLabelsColor.b, theme::axis_box.tickLabelsColor.a);
-        for (const auto& label: m_axisBox->labels()) {
-            plot::drawLabel3D(viewProj, label, color);
+        auto color = ImVec4(theme::axis_box.tickLabelsColor.r, theme::axis_box.tickLabelsColor.g, theme::axis_box.tickLabelsColor.b, theme::axis_box.tickLabelsColor.a);
+
+        for (const auto& [labels, edgeStart, edgeEnd, outward]: m_axisBox->ticks().axes) {
+            const auto screenEdgeStart = plot::worldToScreen(viewProj, edgeStart);
+            const auto screenEdgeEnd = plot::worldToScreen(viewProj, edgeEnd);
+            if (!screenEdgeStart || !screenEdgeEnd) continue;
+
+            glm::vec2 edge = {screenEdgeEnd->x - screenEdgeStart->x, screenEdgeEnd->y - screenEdgeStart->y}; // Edge vector in screen space
+            const float len = glm::length(edge);
+
+            const float spacing = len / static_cast<float>(labels.size() - 1);
+            const float textH = ImGui::GetTextLineHeight();
+            const float alpha = glm::smoothstep(textH * 0.2f, textH * 0.9f, spacing); // Start vanishing at 90% of label non-overlapping, vanish fully at under 20%
+            if (alpha <= 0) continue;
+
+            const glm::vec3 edgeMid = (edgeStart + edgeEnd) * 0.5f;
+            const auto screenMid = plot::worldToScreen(viewProj, edgeMid);
+            const auto screenMidOut = plot::worldToScreen(viewProj, edgeMid + outward);
+            if (!screenMid || !screenMidOut) continue;
+
+            const glm::vec2 offset{screenMidOut->x - screenMid->x, screenMidOut->y - screenMid->y};
+            const float offLen = glm::length(offset);
+            const glm::vec2 dir = offLen > 1e-3f ? offset / offLen : glm::vec2(0.0f);
+            const float strength = glm::smoothstep(2.0f, 12.0f, offLen);
+
+            color.w = alpha;
+            for (const auto& label: labels)
+                drawLabel3D(viewProj, label, dir, strength, color);
         }
 
         ImGui::Render();
@@ -132,8 +159,17 @@ namespace gdp::graphics {
         renderer->onResize(width, height);
     }
 
+    void Renderer::updateProjection(int width, int height) {
+        if (width == 0 || height == 0) return;
+        m_windowWidth = width;
+        m_windowHeight = height;
+        glViewport(0, 0, width, height);
+        m_camera.setAspectRatio(static_cast<double>(width) / height);
+        m_camera.updateProjectionMatrix();
+    }
+
     void Renderer::onResize(int width, int height) {
-        glViewport(0, 0, width, height); // Adjust viewport accordingly
+        updateProjection(width, height);
         render(m_camera); // Re-render manually, since callback fires until let go and stalls render loop
     }
 
