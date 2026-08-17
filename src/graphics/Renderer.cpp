@@ -44,6 +44,8 @@ namespace gdp::graphics {
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glfwSetWindowUserPointer(m_window, this);
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
@@ -128,7 +130,7 @@ namespace gdp::graphics {
 
             const float spacing = len / static_cast<float>(labels.size() - 1);
             const float textH = ImGui::GetTextLineHeight();
-            const float alpha = glm::smoothstep(textH * 0.2f, textH * 0.9f, spacing); // Start vanishing at 90% of label non-overlapping, vanish fully at under 20%
+            const float alpha = glm::smoothstep(textH * 0.2f, textH * 0.9f, spacing); // Start vanishing at 90% overlap-free, vanish fully at under 20%
             if (alpha <= 0) continue;
 
             const glm::vec3 edgeMid = (edgeStart + edgeEnd) * 0.5f;
@@ -150,16 +152,16 @@ namespace gdp::graphics {
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    void Renderer::error_callback(int error, const char* description) {
+    void Renderer::error_callback(const int error, const char* description) {
         fprintf(stderr, "Error %i: %s\n", error, description);
     }
 
-    void Renderer::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    void Renderer::framebuffer_size_callback(GLFWwindow* window, const int width, const int height) {
         auto* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         renderer->onResize(width, height);
     }
 
-    void Renderer::updateProjection(int width, int height) {
+    void Renderer::updateProjection(const int width, const int height) {
         if (width == 0 || height == 0) return;
         m_windowWidth = width;
         m_windowHeight = height;
@@ -168,19 +170,18 @@ namespace gdp::graphics {
         m_camera.updateProjectionMatrix();
     }
 
-    void Renderer::onResize(int width, int height) {
+    void Renderer::onResize(const int width, const int height) {
         updateProjection(width, height);
         render(m_camera); // Re-render manually, since callback fires until let go and stalls render loop
     }
 
-
-    void Renderer::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    void Renderer::key_callback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
             glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 
     void Renderer::scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
-        auto* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
+        const auto* renderer = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
         renderer->m_orbitControl.onScroll(yOffset);
     }
 }

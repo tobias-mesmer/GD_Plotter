@@ -22,8 +22,19 @@ namespace gdp::plot {
         std::array<AxisTicks, 3> axes;
     };
 
-    TickResult ticks(glm::vec3 min, glm::vec3 max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ);
+    struct EdgeSelection {
+        std::array<uint8_t,3> backBit;
 
-    // http://vis.stanford.edu/files/2010-TickLabels-InfoVis.pdf
-    std::vector<glm::vec3> extendedWilkinson();
+        bool operator==(const EdgeSelection& other) const {return this->backBit == other.backBit;};
+    };
+
+    enum TickMode {NORMAL, EXTENDED_WILKINSON};
+
+    TickResult ticks(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ, TickMode mode = NORMAL);
+
+    TickResult ticksNormal(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ);
+
+    TickResult extendedWilkinson(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ);
+
+    EdgeSelection selectEdges(const glm::vec3& cameraViewDir, const glm::vec3& min, const glm::vec3& max);
 }

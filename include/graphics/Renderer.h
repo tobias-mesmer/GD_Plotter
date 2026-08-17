@@ -34,9 +34,9 @@ namespace gdp::graphics {
         int m_windowHeight{720};
 
         unsigned int m_frameCounter{0};
-        float m_fps{0.0};
-        float m_lastFpsTime{0.0};
-        float m_elapsed{0.0};
+        double m_fps{0.0};
+        double m_lastFpsTime{0.0};
+        double m_elapsed{0.0};
 
         const ImVec2 m_statsWindowSize{100, 50};
 

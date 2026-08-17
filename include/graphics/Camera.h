@@ -21,8 +21,9 @@ namespace gdp::graphics {
 
         void updateViewMatrix();
 
-        [[nodiscard]] const glm::mat4& viewMatrix() const {return m_view;}
-        [[nodiscard]] const glm::mat4& projectionMatrix() const {return m_projection;}
+        [[nodiscard]] const glm::mat4& viewMatrix() const { return m_view; }
+        [[nodiscard]] const glm::mat4& projectionMatrix() const { return m_projection; }
+        [[nodiscard]] glm::vec3 viewDirection() const { return glm::vec3{m_view[0].z, m_view[1].z, m_view[2].z}; }
 
     private:
         glm::vec3 m_position;

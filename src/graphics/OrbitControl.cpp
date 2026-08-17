@@ -8,7 +8,7 @@ namespace gdp::graphics {
         double x, y;
         glfwGetCursorPos(window, &x, &y);
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
             const double dx = x - m_lastX;
             const double dy = y - m_lastY;
 

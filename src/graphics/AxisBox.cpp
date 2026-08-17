@@ -1,4 +1,5 @@
 #include "../../include/graphics/AxisBox.h"
+#include "graphics/AxisBox.h"
 
 #include "plot/Ticks.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -6,7 +7,7 @@
 #include "graphics/theme.h"
 
 namespace gdp::graphics {
-    AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
+    AxisBox::AxisBox() : m_boxStyle(BACK), m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
         init();
     }
 
@@ -21,25 +22,64 @@ namespace gdp::graphics {
 
     void AxisBox::init() {
         // ========== AxisBox ==========
+
+        // The combination of a vertex' signs in this representation automatically corresponds to its index:
+        // vertex       binary      index
+        // -1, -1, -1   000         0
+        // 1, -1, -1    001         1
+        // -1, 1, -1    010         2
+        // 1, 1, -1     011         3
+        // ...
+
         float vertices[] = {
             -1, -1, -1,
             1, -1, -1,
-            1, 1, -1,
             -1, 1, -1,
+            1, 1, -1,
             -1, -1, 1,
             1, -1, 1,
-            1, 1, 1,
-            -1, 1, 1
+            -1, 1, 1,
+            1, 1, 1
         };
 
-        unsigned int indices[] = {
-            // front face
-            0, 1, 1, 2, 2, 3, 3, 0,
-            // back face
-            4, 5, 5, 6, 6, 7, 7, 4,
-            // connect
-            0, 4, 1, 5, 2, 6, 3, 7
-        };
+        constexpr unsigned int numEdges = 12 * 2;
+        constexpr unsigned int numPanes = 6 * 2 * 3;
+        unsigned int indices[numEdges + numPanes]; // 12 edges with 2 verts each for edge rendering, then 6 faces with 2 tris each for pane rendering
+
+        // Calculate edge and pane indices per axis
+        for (unsigned int i = 0; i < 3; i++) {
+            // Calculate bit positions of the axes, e.g.:
+            //      cba   or    bac
+            //      110         101
+            //      zyx         zyx
+            const unsigned a = i;
+            const unsigned b = (a + 1) % 3;
+            const unsigned c = (a + 2) % 3;
+
+            for (unsigned int j = 0; j < 4; ++j) {
+                // Go through the 4 combinations
+                const unsigned B = (j & 1) << b; // toggle applying b
+                const unsigned C = (j >> 1) << c; // apply c for the second pair
+
+                // Edges
+                const unsigned start = B | C;
+                const unsigned end = start | (1 << a);
+                indices[(a * 4 + j) * 2] = start;
+                indices[(a * 4 + j) * 2 + 1] = end;
+            }
+        }
+
+        // Create pane tris
+        for (int i = 0; i < 6; ++i) {
+            // First tri
+            indices[numEdges + i * 6] = indices[i * 4];
+            indices[numEdges + i * 6 + 1] = indices[i * 4 + 1];
+            indices[numEdges + i * 6 + 2] = indices[i * 4 + 2];
+            // Second tri
+            indices[numEdges + i * 6 + 3] = indices[i * 4 + 1];
+            indices[numEdges + i * 6 + 4] = indices[i * 4 + 2];
+            indices[numEdges + i * 6 + 5] = indices[i * 4 + 3];
+        }
 
         glGenVertexArrays(1, &m_vao);
         glGenBuffers(1, &m_vbo);
@@ -79,18 +119,38 @@ namespace gdp::graphics {
         setExtents(m_extentsMin, m_extentsMax); // Apply extents to Model matrix and calculate ticks
     }
 
-    void AxisBox::draw(const Camera& camera) const {
+    void AxisBox::update(const Camera& camera) {
+        const plot::EdgeSelection sel = plot::selectEdges(camera.viewDirection(), m_extentsMin, m_extentsMax);
+        if (sel == m_currentSelection) return;
+        m_currentSelection = sel;
+        //rebuildTicks();
+    }
+
+    void AxisBox::draw(const Camera& camera) {
         glUseProgram(m_shader.m_program);
         glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix()));
         glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix()));
 
-        drawBox();
-        drawTicks();
+        switch (m_boxStyle) {
+            case FULL:
+                drawWireFrame();
+                drawTickLines();
+                break;
+            case BACK:
+                //update(camera);
+                drawBackFacing();
+                drawTicksFront();
+                break;
+        }
 
         glUseProgram(0);
     }
 
-    void AxisBox::drawBox() const {
+    void AxisBox::setRenderMode(BoxStyle mode) {
+        m_boxStyle = mode;
+    }
+
+    void AxisBox::drawWireFrame() const {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.boxColor));
 
@@ -102,7 +162,20 @@ namespace gdp::graphics {
         glBindVertexArray(0);
     }
 
-    void AxisBox::drawTicks() const {
+    void AxisBox::drawBackFacing() const {
+        glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
+        glm::vec4 color = theme::axis_box.boxColor;
+        color.a = 0.2f;
+        glUniform4fv(uColor, 1, glm::value_ptr(color));
+
+        glBindVertexArray(m_vao);
+
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<void*>(24 * sizeof(int)));
+
+        glBindVertexArray(0);
+    }
+
+    void AxisBox::drawTickLines() const {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
         glBindVertexArray(m_vao_ticks);
@@ -119,17 +192,21 @@ namespace gdp::graphics {
         glBindVertexArray(0);
     }
 
+    void AxisBox::drawTicksFront() const {
+        // TODO
+    }
+
     void AxisBox::setExtents(const glm::vec3& min, const glm::vec3& max) {
         m_extentsMin = min;
         m_extentsMax = max;
 
-        glm::vec3 center = (min + max) * 0.5f;
-        glm::vec3 size = (max - min) * 0.5f;
+        const glm::vec3 center = (min + max) * 0.5f;
+        const glm::vec3 size = (max - min) * 0.5f;
 
         m_model = glm::translate(glm::mat4(1.0f), center)
                   * glm::scale(glm::mat4(1.0f), size);
 
-        m_ticks = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ);
+        m_ticks = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ, plot::NORMAL);
 
         glBindVertexArray(m_vao_ticks);
 
