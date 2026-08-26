@@ -1,5 +1,6 @@
-#include "../../include/graphics/AxisBox.h"
 #include "graphics/AxisBox.h"
+
+#include <iostream>
 
 #include "plot/Ticks.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -7,7 +8,7 @@
 #include "graphics/theme.h"
 
 namespace gdp::graphics {
-    AxisBox::AxisBox() : m_boxStyle(BACK), m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
+    AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
         init();
     }
 
@@ -31,7 +32,7 @@ namespace gdp::graphics {
         // 1, 1, -1     011         3
         // ...
 
-        float vertices[] = {
+        constexpr float vertices[] = {
             -1, -1, -1,
             1, -1, -1,
             -1, 1, -1,
@@ -42,43 +43,36 @@ namespace gdp::graphics {
             1, 1, 1
         };
 
-        constexpr unsigned int numEdges = 12 * 2;
-        constexpr unsigned int numPanes = 6 * 2 * 3;
-        unsigned int indices[numEdges + numPanes]; // 12 edges with 2 verts each for edge rendering, then 6 faces with 2 tris each for pane rendering
+        constexpr unsigned int numEdgeIndices = 12 * 2;
+        constexpr unsigned int numPaneIndices = 6 * 2 * 3;
+        unsigned int indices[numEdgeIndices + numPaneIndices]; // 12 edges with 2 verts each for edge rendering, then 6 faces with 2 tris each for pane rendering
 
-        // Calculate edge and pane indices per axis
-        for (unsigned int i = 0; i < 3; i++) {
-            // Calculate bit positions of the axes, e.g.:
-            //      cba   or    bac
-            //      110         101
-            //      zyx         zyx
-            const unsigned a = i;
+        // Calculate edge and pane indices per axis a
+        for (unsigned int a = 0; a < 3; a++) {
+            // Calculate bit positions of the other axes -> edges along axis a only vary in b and c
             const unsigned b = (a + 1) % 3;
             const unsigned c = (a + 2) % 3;
 
+            auto corner = [&](const unsigned int j, const unsigned aBit) {
+                // Go through the 4 combinations depending on j
+                return (aBit << a) |
+                       ((j & 1) << b) | // toggle applying b
+                       ((j >> 1) << c); // apply c for the second pair
+            };
+
+            // Edges in direction of axis a (start at a=0, end at a=1)
             for (unsigned int j = 0; j < 4; ++j) {
-                // Go through the 4 combinations
-                const unsigned B = (j & 1) << b; // toggle applying b
-                const unsigned C = (j >> 1) << c; // apply c for the second pair
-
-                // Edges
-                const unsigned start = B | C;
-                const unsigned end = start | (1 << a);
-                indices[(a * 4 + j) * 2] = start;
-                indices[(a * 4 + j) * 2 + 1] = end;
+                indices[(a * 4 + j) * 2] = corner(j, 0);
+                indices[(a * 4 + j) * 2 + 1] = corner(j, 1);
             }
-        }
 
-        // Create pane tris
-        for (int i = 0; i < 6; ++i) {
-            // First tri
-            indices[numEdges + i * 6] = indices[i * 4];
-            indices[numEdges + i * 6 + 1] = indices[i * 4 + 1];
-            indices[numEdges + i * 6 + 2] = indices[i * 4 + 2];
-            // Second tri
-            indices[numEdges + i * 6 + 3] = indices[i * 4 + 1];
-            indices[numEdges + i * 6 + 4] = indices[i * 4 + 2];
-            indices[numEdges + i * 6 + 5] = indices[i * 4 + 3];
+            // Create tris for the 2 panes perpendicular to axis a
+            constexpr unsigned int pattern[6] = {0, 1, 3, 0, 3, 2};
+            for (unsigned int side = 0; side < 2; ++side) {
+                for (unsigned int p = 0; p < 6; ++p) {
+                    indices[numEdgeIndices + (a * 2 + side) * 6 + p] = corner(pattern[p], side);
+                }
+            }
         }
 
         glGenVertexArrays(1, &m_vao);
@@ -119,11 +113,24 @@ namespace gdp::graphics {
         setExtents(m_extentsMin, m_extentsMax); // Apply extents to Model matrix and calculate ticks
     }
 
-    void AxisBox::update(const Camera& camera) {
-        const plot::EdgeSelection sel = plot::selectEdges(camera.viewDirection(), m_extentsMin, m_extentsMax);
-        if (sel == m_currentSelection) return;
+    void AxisBox::updateSelection(const Camera& camera) {
+        const plot::Selection sel = plot::selectEdges(camera.position(), center());
+        const bool dirty = !m_currentSelection || (m_boxStyle == BACK && sel != *m_currentSelection);
+        if (!dirty) return;
         m_currentSelection = sel;
-        //rebuildTicks();
+        //std::cout << "Camera octant: [" << (sel.backBit[0] == 0 ? '-' : '+') << "," << (sel.backBit[1] == 0 ? '-' : '+') << "," << (sel.backBit[2] == 0 ? '-' : '+') << "]" << std::endl;
+        rebuildTicks();
+    }
+
+    void AxisBox::rebuildTicks() {
+        m_ticks = plot::ticks(m_extentsMin, m_extentsMax, m_ticksX, m_ticksY, m_ticksZ, m_boxStyle == BACK ? *m_currentSelection : plot::Selection{}, m_tickMode);
+
+        glBindVertexArray(m_vao_ticks);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_ticks);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(sizeof(glm::vec3) * m_ticks.segments.size()), m_ticks.segments.data(), GL_DYNAMIC_DRAW);
+
+        glBindVertexArray(0);
     }
 
     void AxisBox::draw(const Camera& camera) {
@@ -131,23 +138,25 @@ namespace gdp::graphics {
         glUniformMatrix4fv(uView, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix()));
         glUniformMatrix4fv(uProj, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix()));
 
+        updateSelection(camera);
+
         switch (m_boxStyle) {
             case FULL:
                 drawWireFrame();
-                drawTickLines();
                 break;
             case BACK:
-                //update(camera);
                 drawBackFacing();
-                drawTicksFront();
                 break;
         }
+
+        drawTickLines();
 
         glUseProgram(0);
     }
 
     void AxisBox::setRenderMode(BoxStyle mode) {
         m_boxStyle = mode;
+        m_currentSelection.reset();
     }
 
     void AxisBox::drawWireFrame() const {
@@ -164,13 +173,15 @@ namespace gdp::graphics {
 
     void AxisBox::drawBackFacing() const {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
-        glm::vec4 color = theme::axis_box.boxColor;
-        color.a = 0.2f;
-        glUniform4fv(uColor, 1, glm::value_ptr(color));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.paneColor));
 
         glBindVertexArray(m_vao);
 
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<void*>(24 * sizeof(int)));
+        for (int a = 0; a < 3; ++a) {
+            const int side = m_currentSelection->backBit[a];
+            const int slot = a * 2 + side;
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>((24 + slot * 6) * sizeof(unsigned)));
+        }
 
         glBindVertexArray(0);
     }
@@ -192,10 +203,6 @@ namespace gdp::graphics {
         glBindVertexArray(0);
     }
 
-    void AxisBox::drawTicksFront() const {
-        // TODO
-    }
-
     void AxisBox::setExtents(const glm::vec3& min, const glm::vec3& max) {
         m_extentsMin = min;
         m_extentsMax = max;
@@ -206,13 +213,6 @@ namespace gdp::graphics {
         m_model = glm::translate(glm::mat4(1.0f), center)
                   * glm::scale(glm::mat4(1.0f), size);
 
-        m_ticks = plot::ticks(min, max, m_ticksX, m_ticksY, m_ticksZ, plot::NORMAL);
-
-        glBindVertexArray(m_vao_ticks);
-
-        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_ticks);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(sizeof(glm::vec3) * m_ticks.segments.size()), m_ticks.segments.data(), GL_DYNAMIC_DRAW);
-
-        glBindVertexArray(0);
+        m_currentSelection.reset();
     }
 }

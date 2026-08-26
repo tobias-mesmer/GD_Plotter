@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <glad/glad.h>
 
 #include "Shader.h"
@@ -24,12 +25,13 @@ namespace gdp::graphics {
 
         void setExtents(const glm::vec3& min, const glm::vec3& max);
 
-        [[nodiscard]] const glm::vec3& center() const { return (m_extentsMin + m_extentsMax) * 0.5f; }
+        [[nodiscard]] glm::vec3 center() const { return (m_extentsMin + m_extentsMax) * 0.5f; }
 
         [[nodiscard]] const plot::TickResult& ticks() const { return m_ticks; }
 
     private:
-        BoxStyle m_boxStyle;
+        BoxStyle m_boxStyle{BACK};
+        plot::TickMode m_tickMode{plot::NORMAL};
 
         glm::mat4 m_model = glm::mat4(1.0f);
         glm::vec3 m_extentsMin = glm::vec3(-5.0f);
@@ -52,18 +54,18 @@ namespace gdp::graphics {
         unsigned int m_ticksY = 11;
         unsigned int m_ticksZ = 11;
 
-        plot::EdgeSelection m_currentSelection{};
+        std::optional<plot::Selection> m_currentSelection{};
 
         void init();
 
-        void update(const Camera& camera);
+        void updateSelection(const Camera& camera);
+
+        void rebuildTicks();
 
         void drawWireFrame() const;
 
         void drawBackFacing() const;
 
         void drawTickLines() const;
-
-        void drawTicksFront() const;
     };
 }

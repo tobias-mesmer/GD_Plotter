@@ -22,6 +22,7 @@ namespace gdp::graphics::theme {
 
     struct AxisBox {
         glm::vec4 boxColor = glm::vec4(glm::vec3(0.7), 1);
+        glm::vec4 paneColor = glm::vec4(glm::vec3(0.3), 1);
         glm::vec4 ticksColorX = glm::vec4(glm::vec3(0.84, 0.24, 0.30), 1.0);
         glm::vec4 ticksColorY = glm::vec4(glm::vec3(0.55, 0.75, 0.25), 1.0);
         glm::vec4 ticksColorZ = glm::vec4(glm::vec3(0.25, 0.45, 0.85), 1.0);

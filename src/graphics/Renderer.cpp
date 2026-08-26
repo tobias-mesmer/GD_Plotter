@@ -44,8 +44,6 @@ namespace gdp::graphics {
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glfwSetWindowUserPointer(m_window, this);
         glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
         glfwSetKeyCallback(m_window, key_callback);
@@ -116,7 +114,7 @@ namespace gdp::graphics {
         ImGui::Text("FPS: %.1f", m_fps);
         ImGui::End();
 
-        // Draw tick labels
+        // Draw tick labels as ImGUI text
         const auto viewProj = m_camera.projectionMatrix() * m_camera.viewMatrix();
         auto color = ImVec4(theme::axis_box.tickLabelsColor.r, theme::axis_box.tickLabelsColor.g, theme::axis_box.tickLabelsColor.b, theme::axis_box.tickLabelsColor.a);
 
