@@ -1,4 +1,4 @@
-#include "../../include/graphics/OrbitControl.h"
+#include "graphics/OrbitControl.h"
 
 #include <iomanip>
 #include <GLFW/glfw3.h>

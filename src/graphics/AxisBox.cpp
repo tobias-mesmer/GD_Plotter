@@ -5,7 +5,7 @@
 #include "plot/Ticks.h"
 #include <glm/gtc/type_ptr.hpp>
 
-#include "graphics/theme.h"
+#include "graphics/Theme.h"
 
 namespace gdp::graphics {
     AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {

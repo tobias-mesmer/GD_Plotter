@@ -15,7 +15,7 @@
 
 #include "plot/TextRenderer.h"
 #include "plot/Ticks.h"
-#include "graphics/theme.h"
+#include "graphics/Theme.h"
 
 namespace gdp::graphics {
     Renderer::Renderer(Camera& camera, OrbitControl& orbitControl) : m_camera(camera), m_orbitControl(orbitControl) {
