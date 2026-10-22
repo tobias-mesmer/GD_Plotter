@@ -54,17 +54,25 @@ namespace gdp::graphics {
         unsigned int m_ticksY = 11;
         unsigned int m_ticksZ = 11;
 
-        std::optional<plot::Selection> m_currentSelection{};
+        std::vector<glm::vec3> m_grid;
+        GLuint m_vao_grid = 0;
+        GLuint m_vbo_grid = 0;
+
+        std::optional<plot::Selection> m_currentSelection;
 
         void init();
 
         void updateSelection(const Camera& camera);
 
-        void rebuildTicks();
+        void rebuildTicks(const plot::Selection& selection);
+
+        void rebuildGrid(const plot::Selection& selection);
 
         void drawWireFrame() const;
 
-        void drawBackFacing() const;
+        void drawBackFacing(const plot::Selection& selection) const;
+
+        void drawGrid() const;
 
         void drawTickLines() const;
     };

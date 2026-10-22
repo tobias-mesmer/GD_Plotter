@@ -7,19 +7,17 @@
 using namespace gdp::graphics;
 
 int main() {
-    std::cout << "==================== GD Plotter ====================" << std::endl;
-    std::cout << std::endl <<
-            "GD Plotter Copyright (C) 2026 Tobias Mesmer." << std::endl <<
-            "This program comes with ABSOLUTELY NO WARRANTY;" << std::endl <<
-            "This is free software, and you are welcome to redistribute it" << std::endl <<
-            "under certain conditions. See LICENSE.md." << std::endl
-            << std::endl;
-    std::cout << "====================================================" << std::endl;
+    std::cout << "==================== GD Plotter ====================\n\n" <<
+            "GD Plotter Copyright (C) 2026 Tobias Mesmer.\n" <<
+            "This program comes with ABSOLUTELY NO WARRANTY;\n" <<
+            "This is free software, and you are welcome to redistribute it\n" <<
+            "under certain conditions. See LICENSE.md.\n\n" <<
+            "====================================================\n" << std::flush;
 
     Camera camera{};
     OrbitControl control{camera};
     Renderer renderer{camera, control};
-    const auto window = renderer.getWindow();
+    auto* const window = renderer.getWindow();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -28,5 +26,5 @@ int main() {
         renderer.render(camera);
     }
 
-    exit(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }

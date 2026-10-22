@@ -36,19 +36,22 @@ namespace gdp {
     // http://vis.stanford.edu/files/2010-TickLabels-InfoVis.pdf
     plot::TickResult plot::extendedWilkinson(const glm::vec3& min, const glm::vec3& max, const unsigned int ticksX, const unsigned int ticksY, const unsigned int ticksZ,
                                              Selection selection) {
+
+
         return TickResult{};
     }
 
     // Generate tick segments pointing away from the box and labelling from AxisBox extents, spaced by steps derived from the number of prescribed ticks per axis.
     plot::TickResult plot::ticksNormal(const glm::vec3& min, const glm::vec3& max, const unsigned int ticksX, const unsigned int ticksY, const unsigned int ticksZ, Selection selection) {
         TickResult result{};
-        result.segmentCountPerAxis = {ticksX, ticksY, ticksZ};
+        result.tickCountPerAxis = {ticksX, ticksY, ticksZ};
 
         const unsigned counts[3] = {ticksX, ticksY, ticksZ};
         for (int a = 0; a < 3; ++a) {
             auto& [labels, edgeStart, edgeEnd, outward] = result.axes[a];
             glm::vec3 minA = min;
 
+            // See whether edgeCorner bits of other axes are set, and if so, take the max value instead of min for that axis
             for (int b = 0; b < 3; ++b) {
                 if (b == a) continue;
                 const bool atMax = selection.edgeCorner[a] >> b & 1;
@@ -64,11 +67,11 @@ namespace gdp {
 
             for (unsigned i = 0; i < counts[a]; ++i) {
                 glm::vec3 inner = minA;
-                inner[a] += step * i;
+                inner[a] += step * static_cast<float>(i);
                 const glm::vec3 outer = inner + outward;
                 result.segments.push_back(inner);
                 result.segments.push_back(outer);
-                labels.emplace_back(std::format("{:.2g}", minA[a] + step * i), outer);
+                labels.emplace_back(std::format("{:.2g}", minA[a] + step * static_cast<float>(i)), outer);
             }
         }
 

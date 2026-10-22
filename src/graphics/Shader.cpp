@@ -7,12 +7,12 @@
 namespace gdp::graphics {
     Shader::Shader(const std::string_view vs, const std::string_view fs) {
         const std::filesystem::path p(vs);
-        std::cout << "Compiling shader \"" << p.stem().string() << "\"...";
+        std::cout << "Compiling shader \"" << p.stem().string() << "\"..." << std::flush;
 
         if (!std::filesystem::exists(vs))
-            std::cerr << "Vertex shader path incorrect!" << std::endl;
+            std::cerr << "Vertex shader path incorrect!\n";
         if (!std::filesystem::exists(fs))
-            std::cerr << "Fragment shader path incorrect!" << std::endl;
+            std::cerr << "Fragment shader path incorrect!\n";
 
         std::string vertSrc = loadFile(vs);
         std::string fragSrc = loadFile(fs);
@@ -36,7 +36,7 @@ namespace gdp::graphics {
         glDeleteShader(vert);
         glDeleteShader(frag);
 
-        std::cout << "done!" << std::endl;
+        std::cout << "done!\n";
     }
 
 
@@ -44,10 +44,10 @@ namespace gdp::graphics {
         glDeleteProgram(m_program);
     }
 
-     std::string Shader::loadFile(const std::string_view path) {
-        std::ifstream file(path.data());
+     std::string Shader::loadFile(const std::filesystem::path& path) {
+        std::ifstream file(path);
         if (!file.is_open())
-            throw std::runtime_error("Failed to open shader file: " + std::string(path));
+            throw std::runtime_error("Failed to open shader file: " + path.string());
 
         return std::string{
             std::istreambuf_iterator<char>(file),

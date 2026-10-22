@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "plot/Ticks.h"
+#include "plot/Grid.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "graphics/Theme.h"
@@ -19,6 +20,9 @@ namespace gdp::graphics {
 
         glDeleteVertexArrays(1, &m_vao_ticks);
         glDeleteBuffers(1, &m_vbo_ticks);
+
+        glDeleteVertexArrays(1, &m_vao_grid);
+        glDeleteBuffers(1, &m_vbo_grid);
     }
 
     void AxisBox::init() {
@@ -110,6 +114,19 @@ namespace gdp::graphics {
 
         glBindVertexArray(0);
 
+        // ========== Grid ==========
+
+        glGenVertexArrays(1, &m_vao_grid);
+        glGenBuffers(1, &m_vbo_grid);
+
+        glBindVertexArray(m_vao_grid);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_grid);
+
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+
+        glBindVertexArray(0);
+
         setExtents(m_extentsMin, m_extentsMax); // Apply extents to Model matrix and calculate ticks
     }
 
@@ -119,16 +136,28 @@ namespace gdp::graphics {
         if (!dirty) return;
         m_currentSelection = sel;
         //std::cout << "Camera octant: [" << (sel.backBit[0] == 0 ? '-' : '+') << "," << (sel.backBit[1] == 0 ? '-' : '+') << "," << (sel.backBit[2] == 0 ? '-' : '+') << "]" << std::endl;
-        rebuildTicks();
+        rebuildTicks(sel);
+        if (m_boxStyle == BACK) rebuildGrid(sel);
     }
 
-    void AxisBox::rebuildTicks() {
-        m_ticks = plot::ticks(m_extentsMin, m_extentsMax, m_ticksX, m_ticksY, m_ticksZ, m_boxStyle == BACK ? *m_currentSelection : plot::Selection{}, m_tickMode);
+    void AxisBox::rebuildTicks(const plot::Selection& selection) {
+        m_ticks = plot::ticks(m_extentsMin, m_extentsMax, m_ticksX, m_ticksY, m_ticksZ, m_boxStyle == BACK ? selection : plot::Selection{}, m_tickMode);
 
         glBindVertexArray(m_vao_ticks);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo_ticks);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(sizeof(glm::vec3) * m_ticks.segments.size()), m_ticks.segments.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(glm::vec3) * m_ticks.segments.size()), m_ticks.segments.data(), GL_DYNAMIC_DRAW);
+
+        glBindVertexArray(0);
+    }
+
+    void AxisBox::rebuildGrid(const plot::Selection& selection) {
+        m_grid = plot::grid(m_extentsMin, m_extentsMax, m_ticks, selection);
+
+        glBindVertexArray(m_vao_grid);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_vbo_grid);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(glm::vec3) * m_grid.size()), m_grid.data(), GL_DYNAMIC_DRAW);
 
         glBindVertexArray(0);
     }
@@ -145,7 +174,8 @@ namespace gdp::graphics {
                 drawWireFrame();
                 break;
             case BACK:
-                drawBackFacing();
+                drawBackFacing(m_currentSelection.value());
+                drawGrid();
                 break;
         }
 
@@ -171,18 +201,29 @@ namespace gdp::graphics {
         glBindVertexArray(0);
     }
 
-    void AxisBox::drawBackFacing() const {
+    void AxisBox::drawBackFacing(const plot::Selection& selection) const {
         glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.paneColor));
 
         glBindVertexArray(m_vao);
-
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(1.0f, 1.0f);
         for (int a = 0; a < 3; ++a) {
             const int side = m_currentSelection->backBit[a];
             const int slot = a * 2 + side;
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>((24 + slot * 6) * sizeof(unsigned)));
         }
+        glDisable(GL_POLYGON_OFFSET_FILL);
 
+        glBindVertexArray(0);
+    }
+
+    void AxisBox::drawGrid() const {
+        glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.gridColor));
+
+        glBindVertexArray(m_vao_grid);
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_grid.size()));
         glBindVertexArray(0);
     }
 
@@ -193,12 +234,16 @@ namespace gdp::graphics {
 
         glLineWidth(2);
 
+        const size_t ticksX = ticks().getTickCountPerAxis(0);
+        const size_t ticksY = ticks().getTickCountPerAxis(1);
+        const size_t ticksZ = ticks().getTickCountPerAxis(2);
+        
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorX));
-        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(2 * m_ticksX));
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(2 * ticksX));
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorY));
-        glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * m_ticksX), static_cast<GLsizei>(2 * m_ticksY));
+        glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * ticksX), static_cast<GLsizei>(2 * ticksY));
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorZ));
-        glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * (m_ticksX + m_ticksY)), static_cast<GLsizei>(2 * m_ticksZ));
+        glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * (ticksX + ticksY)), static_cast<GLsizei>(2 * ticksZ));
 
         glBindVertexArray(0);
     }

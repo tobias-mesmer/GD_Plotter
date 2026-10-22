@@ -20,8 +20,20 @@ namespace gdp::plot {
 
     struct TickResult {
         std::vector<glm::vec3> segments;
-        std::array<size_t, 3> segmentCountPerAxis;
+        std::array<size_t, 3> tickCountPerAxis;
         std::array<AxisTicks, 3> axes;
+
+        [[nodiscard]] size_t getTickCount() const { return segments.size() / 2; }
+
+        [[nodiscard]] size_t getTickCountPerAxis(const unsigned int axis) const { return tickCountPerAxis[axis]; }
+
+        [[nodiscard]] glm::vec3 getTickAt(unsigned int axis, const unsigned int offset) const {
+            size_t axisOffset = 0;
+            while (axis > 0) {
+                axisOffset += tickCountPerAxis[--axis];
+            }
+            return segments[(axisOffset + offset) * 2];
+        }
     };
 
     struct Selection {

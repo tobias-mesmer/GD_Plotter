@@ -19,9 +19,11 @@ namespace gdp::graphics {
 
         double m_lastX{0};
         double m_lastY{0};
-        double m_pitch{0};
-        double m_yaw{0};
-        double m_radius{10.0};
+        double m_pitch{15};
+        double m_yaw{-30};
+        double m_radius{23.0};
+        static constexpr double m_minRadius{1.0};
+        static constexpr double m_maxRadius{30.0};
         double m_rotationSpeed{0.3};
         double m_zoomSpeed{0.5};
 

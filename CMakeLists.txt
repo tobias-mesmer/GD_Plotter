@@ -68,6 +68,7 @@ add_executable(${PROJECT_NAME}
         src/graphics/DebugCube.cpp
         src/graphics/AxisBox.cpp
         src/plot/Ticks.cpp
+        src/plot/Grid.cpp
         src/plot/TextRenderer.cpp
 )
 
@@ -81,3 +82,9 @@ target_link_libraries(${PROJECT_NAME}
         OpenGL::GL
         glm::glm
 )
+
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
+endif()
