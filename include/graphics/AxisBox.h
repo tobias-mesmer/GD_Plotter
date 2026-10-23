@@ -31,11 +31,11 @@ namespace gdp::graphics {
 
     private:
         BoxStyle m_boxStyle{BACK};
-        plot::TickMode m_tickMode{plot::NORMAL};
+        plot::TickMode m_tickMode{plot::EXTENDED_WILKINSON};
 
         glm::mat4 m_model = glm::mat4(1.0f);
-        glm::vec3 m_extentsMin = glm::vec3(-5.0f);
-        glm::vec3 m_extentsMax = glm::vec3(5.0f);
+        glm::vec3 m_extentsMin = glm::vec3(-5.3f);
+        glm::vec3 m_extentsMax = glm::vec3(5.3f);
 
         GLuint m_vao = 0;
         GLuint m_vbo = 0;

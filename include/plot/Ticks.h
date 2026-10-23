@@ -47,9 +47,5 @@ namespace gdp::plot {
 
     TickResult ticks(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ, Selection selection, TickMode mode = NORMAL);
 
-    TickResult ticksNormal(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ, Selection selection);
-
-    TickResult extendedWilkinson(const glm::vec3& min, const glm::vec3& max, unsigned int ticksX, unsigned int ticksY, unsigned int ticksZ, Selection selection);
-
     Selection selectEdges(const glm::vec3& cameraPos, const glm::vec3& center);
 }
