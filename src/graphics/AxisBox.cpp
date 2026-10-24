@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "graphics/Theme.h"
+#include "plot/Box.h"
 
 namespace gdp::graphics {
     AxisBox::AxisBox() : m_shader(Shader("../../assets/shaders/axisBox.vs", "../../assets/shaders/axisBox.fs")) {
@@ -36,7 +37,7 @@ namespace gdp::graphics {
         // 1, 1, -1     011         3
         // ...
 
-        constexpr float vertices[] = {
+        std::array<float, 24> vertices = {
             -1, -1, -1,
             1, -1, -1,
             -1, 1, -1,
@@ -49,32 +50,23 @@ namespace gdp::graphics {
 
         constexpr unsigned int numEdgeIndices = 12 * 2;
         constexpr unsigned int numPaneIndices = 6 * 2 * 3;
-        unsigned int indices[numEdgeIndices + numPaneIndices]; // 12 edges with 2 verts each for edge rendering, then 6 faces with 2 tris each for pane rendering
+        std::array<GLuint, numEdgeIndices + numPaneIndices> indices; // 12 edges with 2 verts each for edge rendering, then 6 faces with 2 tris each for pane rendering
 
         // Calculate edge and pane indices per axis a
         for (unsigned int a = 0; a < 3; a++) {
-            // Calculate bit positions of the other axes -> edges along axis a only vary in b and c
-            const unsigned b = (a + 1) % 3;
-            const unsigned c = (a + 2) % 3;
-
-            auto corner = [&](const unsigned int j, const unsigned aBit) {
-                // Go through the 4 combinations depending on j
-                return (aBit << a) |
-                       ((j & 1) << b) | // toggle applying b
-                       ((j >> 1) << c); // apply c for the second pair
-            };
-
             // Edges in direction of axis a (start at a=0, end at a=1)
             for (unsigned int j = 0; j < 4; ++j) {
-                indices[(a * 4 + j) * 2] = corner(j, 0);
-                indices[(a * 4 + j) * 2 + 1] = corner(j, 1);
+                const unsigned e = a * 4 + j;
+                auto [start, end] = plot::Box::edgeCornersIndices(e);
+                indices[e * 2] = start;
+                indices[e * 2 + 1] = end;
             }
 
             // Create tris for the 2 panes perpendicular to axis a
-            constexpr unsigned int pattern[6] = {0, 1, 3, 0, 3, 2};
+            std::array<unsigned, 6> pattern = {0, 1, 3, 0, 3, 2};
             for (unsigned int side = 0; side < 2; ++side) {
                 for (unsigned int p = 0; p < 6; ++p) {
-                    indices[numEdgeIndices + (a * 2 + side) * 6 + p] = corner(pattern[p], side);
+                    indices[numEdgeIndices + (a * 2 + side) * 6 + p] = plot::Box::cornerIndex(a, side, pattern[p]);
                 }
             }
         }
@@ -86,10 +78,10 @@ namespace gdp::graphics {
         glBindVertexArray(m_vao);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices.data(), GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
@@ -133,7 +125,7 @@ namespace gdp::graphics {
     void AxisBox::updateSelection(const Camera& camera) {
         const plot::Selection sel = plot::selectEdges(camera.position(), center());
         const bool dirty = !m_currentSelection || (m_boxStyle == BACK && sel != *m_currentSelection);
-        if (!dirty) return;
+        if (!dirty || m_isSelectionLocked) return;
         m_currentSelection = sel;
         //std::cout << "Camera octant: [" << (sel.backBit[0] == 0 ? '-' : '+') << "," << (sel.backBit[1] == 0 ? '-' : '+') << "," << (sel.backBit[2] == 0 ? '-' : '+') << "]" << std::endl;
         rebuildTicks(sel);
@@ -180,6 +172,7 @@ namespace gdp::graphics {
         }
 
         drawTickLines();
+        drawHighlightedEdge();
 
         glUseProgram(0);
     }
@@ -237,7 +230,7 @@ namespace gdp::graphics {
         const size_t ticksX = ticks().getTickCountPerAxis(0);
         const size_t ticksY = ticks().getTickCountPerAxis(1);
         const size_t ticksZ = ticks().getTickCountPerAxis(2);
-        
+
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorX));
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(2 * ticksX));
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorY));
@@ -245,6 +238,20 @@ namespace gdp::graphics {
         glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.ticksColorZ));
         glDrawArrays(GL_LINES, static_cast<GLsizei>(2 * (ticksX + ticksY)), static_cast<GLsizei>(2 * ticksZ));
 
+        glBindVertexArray(0);
+    }
+
+    void AxisBox::drawHighlightedEdge() const {
+        if (!m_highlightedEdge.has_value()) return;
+        //std::cout << std::format("Highlighted edge: {}\n", m_highlightedEdge.value()) << std::flush;
+
+        glUniformMatrix4fv(uModel, 1, GL_FALSE, glm::value_ptr(m_model));
+        glUniform4fv(uColor, 1, glm::value_ptr(theme::axis_box.highlightColor));
+
+        glBindVertexArray(m_vao);
+        glLineWidth(2);
+        glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, reinterpret_cast<void*>(*m_highlightedEdge * 2 * sizeof(GLuint)));
+        glLineWidth(1);
         glBindVertexArray(0);
     }
 
@@ -259,5 +266,9 @@ namespace gdp::graphics {
                   * glm::scale(glm::mat4(1.0f), size);
 
         m_currentSelection.reset();
+    }
+
+    void AxisBox::setHighlightedEdge(const std::optional<unsigned> highlightedEdge) {
+        m_highlightedEdge = highlightedEdge;
     }
 }

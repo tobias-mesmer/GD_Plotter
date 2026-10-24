@@ -70,6 +70,9 @@ add_executable(${PROJECT_NAME}
         src/plot/Ticks.cpp
         src/plot/Grid.cpp
         src/plot/TextRenderer.cpp
+        src/graphics/AxisBoxControl.cpp
+        include/graphics/AxisBoxControl.h
+        include/plot/Box.h
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)

@@ -25,9 +25,21 @@ namespace gdp::graphics {
 
         void setExtents(const glm::vec3& min, const glm::vec3& max);
 
+        [[nodiscard]] const glm::vec3& min() const{return m_extentsMin;}
+
+        [[nodiscard]] const glm::vec3& max() const{return m_extentsMax;}
+
         [[nodiscard]] glm::vec3 center() const { return (m_extentsMin + m_extentsMax) * 0.5f; }
 
         [[nodiscard]] const plot::TickResult& ticks() const { return m_ticks; }
+
+        void setHighlightedEdge(std::optional<unsigned> highlightedEdge);
+
+        [[nodiscard]] std::optional<plot::Selection> selection() const { return m_currentSelection; }
+
+        void setSelectionLocked(const bool locked){m_isSelectionLocked = locked; }
+
+        [[nodiscard]] glm::mat4 modelMatrix() const { return m_model; }
 
     private:
         BoxStyle m_boxStyle{BACK};
@@ -59,6 +71,9 @@ namespace gdp::graphics {
         GLuint m_vbo_grid = 0;
 
         std::optional<plot::Selection> m_currentSelection;
+        bool m_isSelectionLocked{false};
+
+        std::optional<unsigned> m_highlightedEdge;
 
         void init();
 
@@ -75,5 +90,7 @@ namespace gdp::graphics {
         void drawGrid() const;
 
         void drawTickLines() const;
+
+        void drawHighlightedEdge() const;
     };
 }

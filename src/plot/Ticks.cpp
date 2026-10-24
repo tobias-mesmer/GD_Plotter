@@ -171,7 +171,10 @@ namespace gdp {
                                 continue;
                             }
 
-                            for (double start = minStart; start <= maxStart; start += 1.0) {
+                            const auto startCount = static_cast<long long>(maxStart - minStart);
+                            for (long long i = 0; i <= startCount; ++i) {
+                                const double start = minStart + static_cast<double>(i);
+
                                 double lmin = start * (step / j);
                                 double lmax = lmin + step * (k - 1);
                                 double lstep = step;

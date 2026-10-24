@@ -13,6 +13,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "graphics/AxisBoxControl.h"
 #include "plot/TextRenderer.h"
 #include "plot/Ticks.h"
 #include "graphics/Theme.h"

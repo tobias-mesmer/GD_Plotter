@@ -13,6 +13,7 @@ Checks: >
   -readability-implicit-bool-conversion,
   -readability-trailing-comma,
   -readability-redundant-parentheses,
+  -readability-isolate-declaration,
   -bugprone-signed-bitwise,
   -bugprone-easily-swappable-parameters,
   -performance-no-int-to-ptr

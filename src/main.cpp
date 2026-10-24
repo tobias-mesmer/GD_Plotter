@@ -2,6 +2,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include "graphics/OrbitControl.h"
+#include "graphics/AxisBoxControl.h"
 #include "graphics/Renderer.h"
 
 using namespace gdp::graphics;
@@ -15,14 +16,16 @@ int main() {
             "====================================================\n" << std::flush;
 
     Camera camera{};
-    OrbitControl control{camera};
-    Renderer renderer{camera, control};
+    OrbitControl orbitControl{camera};
+    Renderer renderer{camera, orbitControl};
+    AxisBoxControl axisBoxControl{renderer.axisBox()};
     auto* const window = renderer.getWindow();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        control.update(window);
+        axisBoxControl.update(window, camera);
+        if (!axisBoxControl.isDragging()) orbitControl.update(window);
         renderer.render(camera);
     }
 

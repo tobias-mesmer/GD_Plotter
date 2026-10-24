@@ -1,7 +1,7 @@
 #include "graphics/OrbitControl.h"
 
+#include <algorithm>
 #include <iomanip>
-#include <GLFW/glfw3.h>
 
 namespace gdp::graphics {
     void OrbitControl::update(GLFWwindow* window) {
@@ -15,10 +15,8 @@ namespace gdp::graphics {
             m_yaw += fmod(dx * m_rotationSpeed, 360.0);
             m_pitch += dy * m_rotationSpeed;
 
-            if (m_pitch > 89.0f)
-                m_pitch = 89.0f;
-            if (m_pitch < -89.0f)
-                m_pitch = -89.0f;
+            m_pitch = std::min<double>(m_pitch, 89.0f);
+            m_pitch = std::max<double>(m_pitch, -89.0f);
 
             updateCameraPosition();
         }

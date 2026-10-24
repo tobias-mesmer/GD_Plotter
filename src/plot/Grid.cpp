@@ -1,11 +1,10 @@
 #include "plot/Grid.h"
 
+#include "plot/Box.h"
+
 // Generate grid line segments from selected back panes by starting from where they intersect, then computing the front per axis.
 std::vector<glm::vec3> gdp::plot::grid(const glm::vec3& min, const glm::vec3& max, const TickResult& ticks, Selection selection) {
     std::vector<glm::vec3> result;
-
-    auto back = [=](const int i) { return selection.backBit[i] ? max[i] : min[i]; };
-    auto front = [=](const int i) { return selection.backBit[i] ? min[i] : max[i]; };
 
     for (int a = 0; a < 3; ++a) {
 
@@ -19,18 +18,18 @@ std::vector<glm::vec3> gdp::plot::grid(const glm::vec3& min, const glm::vec3& ma
             // Construct the tick pos that lies on the line where two back panes intersect
             glm::vec3 backTick{};
             backTick[a] = tick[a];
-            backTick[b] = back(b);
-            backTick[c] = back(c);
+            backTick[b] = Box::back(b, min, max, selection);
+            backTick[c] = Box::back(c, min, max, selection);
 
             // Flip individual other axes to get front
             result.push_back(backTick);
             auto frontTickB = backTick;
-            frontTickB[b] = front(b);
+            frontTickB[b] = Box::front(b, min, max, selection);
             result.push_back(frontTickB);
 
             result.push_back(backTick);
             auto frontTickC = backTick;
-            frontTickC[c] = front(c);
+            frontTickC[c] = Box::front(c, min, max, selection);
             result.push_back(frontTickC);
         }
     }

@@ -8,7 +8,6 @@
 #include "DebugCube.h"
 #include "imgui.h"
 #include "OrbitControl.h"
-#include "Theme.h"
 
 namespace gdp::graphics {
     class Renderer {
@@ -22,6 +21,8 @@ namespace gdp::graphics {
         }
 
         void render(const Camera& camera);
+
+        [[nodiscard]] AxisBox& axisBox() const {return *m_axisBox;}
 
     private:
         GLFWwindow* m_window;
